@@ -1,0 +1,7 @@
+{
+  "name": "GeauxCleanup",
+  "description": "A premium, tech-enabled cleaning logistics platform featuring a high-converting landing page, booking engine, and administrative dashboard.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
