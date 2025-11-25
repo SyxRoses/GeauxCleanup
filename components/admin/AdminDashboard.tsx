@@ -70,6 +70,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskPriority, setNewTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
 
+    // Drag and Drop State
+    const [draggedTask, setDraggedTask] = useState<AdminTask | null>(null);
+
     useEffect(() => {
         fetchData();
         fetchUser();
@@ -143,6 +146,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
         } catch (error) {
             console.error('Error deleting task:', error);
         }
+    };
+
+    // Drag and Drop Handlers
+    const handleDragStart = (task: AdminTask) => {
+        setDraggedTask(task);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedTask(null);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault(); // Allow drop
+    };
+
+    const handleDrop = async (newStatus: 'todo' | 'in_progress' | 'done') => {
+        if (!draggedTask) return;
+
+        try {
+            const updatedTask = await supabaseService.updateAdminTask(draggedTask.id, { status: newStatus });
+            setAdminTasks(adminTasks.map(t => t.id === draggedTask.id ? updatedTask : t));
+            showToast(`Task moved to ${newStatus === 'todo' ? 'To Do' : newStatus === 'in_progress' ? 'In Progress' : 'Done'}`);
+        } catch (error) {
+            console.error('Error updating task status:', error);
+            showToast('Failed to move task');
+        }
+        setDraggedTask(null);
     };
 
     const handlePayroll = () => {
@@ -385,15 +415,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4 h-[220px]">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-auto md:h-[220px]">
                             {/* To Do Column */}
-                            <div className="bg-gray-50 rounded-xl p-3 flex flex-col">
+                            <div
+                                className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
+                                onDragOver={handleDragOver}
+                                onDrop={() => handleDrop('todo')}
+                            >
                                 <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
                                     <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div> To Do
                                 </h4>
                                 <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
                                     {adminTasks.filter(t => t.status === 'todo').map(task => (
-                                        <div key={task.id} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow">
+                                        <div
+                                            key={task.id}
+                                            draggable
+                                            onDragStart={() => handleDragStart(task)}
+                                            onDragEnd={handleDragEnd}
+                                            className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-50' : 'opacity-100'
+                                                }`}
+                                        >
                                             <div className={`text-xs font-bold mb-1 ${task.priority === 'high' ? 'text-red-600' : 'text-blue-600'}`}>{task.priority}</div>
                                             <p className="text-sm font-medium text-zinc-800">{task.title}</p>
                                         </div>
@@ -402,13 +443,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
                             </div>
 
                             {/* In Progress Column */}
-                            <div className="bg-gray-50 rounded-xl p-3 flex flex-col">
+                            <div
+                                className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
+                                onDragOver={handleDragOver}
+                                onDrop={() => handleDrop('in_progress')}
+                            >
                                 <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
                                     <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div> In Progress
                                 </h4>
                                 <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
                                     {adminTasks.filter(t => t.status === 'in_progress').map(task => (
-                                        <div key={task.id} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow">
+                                        <div
+                                            key={task.id}
+                                            draggable
+                                            onDragStart={() => handleDragStart(task)}
+                                            onDragEnd={handleDragEnd}
+                                            className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-50' : 'opacity-100'
+                                                }`}
+                                        >
                                             <div className={`text-xs font-bold mb-1 ${task.priority === 'high' ? 'text-red-600' : 'text-orange-600'}`}>{task.priority}</div>
                                             <p className="text-sm font-medium text-zinc-800">{task.title}</p>
                                         </div>
@@ -417,13 +469,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
                             </div>
 
                             {/* Done Column */}
-                            <div className="bg-gray-50 rounded-xl p-3 flex flex-col">
+                            <div
+                                className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
+                                onDragOver={handleDragOver}
+                                onDrop={() => handleDrop('done')}
+                            >
                                 <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
                                     <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div> Done
                                 </h4>
                                 <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
                                     {adminTasks.filter(t => t.status === 'done').map(task => (
-                                        <div key={task.id} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 opacity-60">
+                                        <div
+                                            key={task.id}
+                                            draggable
+                                            onDragStart={() => handleDragStart(task)}
+                                            onDragEnd={handleDragEnd}
+                                            className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-30' : 'opacity-60'
+                                                }`}
+                                        >
                                             <div className="text-xs font-bold text-gray-500 mb-1">{task.priority}</div>
                                             <p className="text-sm font-medium text-zinc-800 line-through">{task.title}</p>
                                         </div>
