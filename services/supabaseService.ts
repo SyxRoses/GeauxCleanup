@@ -220,5 +220,28 @@ export const supabaseService = {
             console.error('Error deleting task:', error);
             throw error;
         }
+    },
+    /**
+     * Subscribe to real-time changes for a specific table
+     */
+    subscribeToTable: (table: string, callback: (payload: any) => void) => {
+        const channel = supabase
+            .channel(`public:${table}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: table
+                },
+                (payload) => {
+                    callback(payload);
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }
 };

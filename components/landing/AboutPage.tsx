@@ -23,7 +23,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBook }) => {
                         More than just a <br /> cleaning company.
                     </h1>
                     <p className="text-xl text-gray-200 max-w-2xl mx-auto leading-relaxed">
-                        We are a team of dedicated professionals committed to bringing peace, comfort, and sparkle back into your life.
+                        We are a team of dedicated professionals committed to bringing efficiency, cleanliness, and sparkle back into your workspace.
                     </p>
                 </div>
             </div>
@@ -39,10 +39,10 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBook }) => {
                             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Built on trust, driven by excellence.</h2>
                             <div className="prose prose-lg text-gray-500">
                                 <p className="mb-4">
-                                    GeauxCleanup started with a simple mission: to provide a cleaning service that treats every home like our own. What began as a small family operation has grown into a trusted partner for hundreds of families and businesses in the area.
+                                    GeauxCleanup started with a simple mission: to provide a cleaning service that treats every business like our own. What began as a small operation has grown into a trusted partner for hundreds of offices and commercial facilities in the area.
                                 </p>
                                 <p className="mb-4">
-                                    We understand that inviting someone into your personal space requires a great deal of trust. That's why we don't just hire cleaners; we hire people of integrity who take pride in their work. Every member of our team undergoes rigorous background checks and comprehensive training to ensure they meet our high standards.
+                                    We understand that inviting someone into your office requires a great deal of trust. That's why we don't just hire cleaners; we hire people of integrity who take pride in their work. Every member of our team undergoes rigorous background checks and comprehensive training to ensure they meet our high standards.
                                 </p>
                                 <p>
                                     Today, we are proud to be the highest-rated cleaning service in the region, but our core values remain the same. We aren't satisfied until you are.
@@ -64,7 +64,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBook }) => {
                                     <Star className="text-yellow-400 fill-current" size={24} />
                                     <span className="text-3xl font-bold text-gray-900">4.9/5</span>
                                 </div>
-                                <p className="text-sm text-gray-500 font-medium">Average customer rating across 2,000+ reviews.</p>
+                                <p className="text-sm text-gray-500 font-medium">Average customer rating across 20+ reviews.</p>
                             </div>
                         </div>
                     </div>
@@ -92,7 +92,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBook }) => {
                                 <Heart size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-3">Care</h3>
-                            <p className="text-gray-500 leading-relaxed">We treat your home, your pets, and your belongings with the utmost respect and gentleness.</p>
+                            <p className="text-gray-500 leading-relaxed">We treat your office, your equipment, and your employees with the utmost respect and care.</p>
                         </div>
                         <div className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-6">
@@ -123,11 +123,11 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBook }) => {
                                 <span className="text-gray-400 font-medium">Satisfaction Guarantee</span>
                             </div>
                             <div className="p-12 text-center">
-                                <span className="block text-5xl font-bold text-white mb-2">5k+</span>
+                                <span className="block text-5xl font-bold text-white mb-2">50+</span>
                                 <span className="text-gray-400 font-medium">Cleanings Completed</span>
                             </div>
                             <div className="p-12 text-center">
-                                <span className="block text-5xl font-bold text-white mb-2">50+</span>
+                                <span className="block text-5xl font-bold text-white mb-2">5+</span>
                                 <span className="text-gray-400 font-medium">Professional Staff</span>
                             </div>
                         </div>
@@ -139,7 +139,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onBook }) => {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-12">
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">Ready to meet the team?</h2>
                 <p className="text-gray-500 text-lg mb-10">
-                    Book your first cleaning today and see why GeauxCleanup is the preferred choice for your neighbors.
+                    Book your first cleaning today and see why GeauxCleanup is the preferred choice for local businesses.
                 </p>
                 <Button onClick={onBook} size="lg" className="rounded-full px-10 h-14 text-base">
                     Get Started <ArrowRight className="ml-2 h-5 w-5" />

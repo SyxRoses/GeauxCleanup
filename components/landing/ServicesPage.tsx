@@ -12,77 +12,22 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onBook }) => {
             {/* Header */}
             <div className="bg-gray-50 py-16 mb-16 border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Our Services</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Commercial Services</h1>
                     <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-                        Comprehensive cleaning solutions for every space. We handle the details so you can focus on what matters.
+                        Professional cleaning solutions for modern businesses. We handle the details so you can focus on your work.
                     </p>
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
 
-                {/* Residential Services */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <div>
-                        <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wide mb-6">
-                            <Home size={12} className="mr-2" />
-                            Residential
-                        </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-6">Home Cleaning</h2>
-                        <p className="text-gray-500 text-lg mb-8">
-                            From cozy apartments to sprawling estates, we treat your home with the utmost care and respect.
-                        </p>
 
-                        <div className="space-y-6">
-                            <div className="flex items-start">
-                                <div className="flex-shrink-0 mt-1">
-                                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                                        <Check size={14} className="text-green-600" />
-                                    </div>
-                                </div>
-                                <div className="ml-4">
-                                    <h3 className="text-lg font-bold text-gray-900">Standard Cleaning</h3>
-                                    <p className="text-gray-500 mt-1">Dusting all surfaces, vacuuming carpets and rugs, mopping floors, cleaning bathrooms and kitchen, emptying trash.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start">
-                                <div className="flex-shrink-0 mt-1">
-                                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                                        <Check size={14} className="text-green-600" />
-                                    </div>
-                                </div>
-                                <div className="ml-4">
-                                    <h3 className="text-lg font-bold text-gray-900">Deep Cleaning</h3>
-                                    <p className="text-gray-500 mt-1">Includes standard services plus baseboards, ceiling fans, inside appliances (oven/fridge), and detailed scrubbing of tile/grout.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start">
-                                <div className="flex-shrink-0 mt-1">
-                                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                                        <Check size={14} className="text-green-600" />
-                                    </div>
-                                </div>
-                                <div className="ml-4">
-                                    <h3 className="text-lg font-bold text-gray-900">Move-In / Move-Out</h3>
-                                    <p className="text-gray-500 mt-1">Ensure the property is pristine for the next resident. Includes inside cabinets and drawers.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-xl">
-                        <img
-                            src="/images/service-residential.png"
-                            alt="Residential Cleaning"
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                </div>
 
                 {/* Commercial Services */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center lg:flex-row-reverse">
                     <div className="order-last lg:order-first relative h-[500px] rounded-3xl overflow-hidden shadow-xl">
                         <img
-                            src="/images/gallery-living-room.png"
+                            src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80"
                             alt="Commercial Cleaning"
                             className="w-full h-full object-cover"
                         />
@@ -185,7 +130,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onBook }) => {
                     </div>
                     <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-xl">
                         <img
-                            src="/images/gallery-vacuum.png"
+                            src="/images/service-specialized.png"
                             alt="Specialized Cleaning"
                             className="w-full h-full object-cover"
                         />

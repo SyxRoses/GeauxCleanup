@@ -27,21 +27,9 @@ import {
     Phone,
     Trash2
 } from 'lucide-react';
-import { LiveMap } from './LiveMap';
 import { supabaseService } from '../../services/supabaseService';
 import { Booking, AdminTask } from '../../types';
 import { supabase } from '../../lib/supabase';
-
-// --- Demo Data Configuration (Kept for non-booking features) ---
-const demoData = {
-    fleet: [
-        { id: 'Van 1', lat: 0, lng: 0, status: 'working', rotation: 45 },
-        { id: 'Van 2', lat: 0, lng: 0, status: 'working', rotation: 90 },
-        { id: 'Van 3', lat: 0, lng: 0, status: 'driving', rotation: 180 },
-        { id: 'Van 4', lat: 0, lng: 0, status: 'driving', rotation: -45 },
-        { id: 'Van 5', lat: 0, lng: 0, status: 'offline', rotation: 0 },
-    ]
-};
 
 interface AdminDashboardProps {
     onBack: () => void;
@@ -76,6 +64,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
     useEffect(() => {
         fetchData();
         fetchUser();
+
+        // Real-time Subscriptions
+        const unsubscribeTasks = supabaseService.subscribeToTable('admin_tasks', (payload) => {
+            if (payload.eventType === 'INSERT') {
+                setAdminTasks(prev => [payload.new, ...prev]);
+            } else if (payload.eventType === 'UPDATE') {
+                setAdminTasks(prev => prev.map(task => task.id === payload.new.id ? payload.new : task));
+            } else if (payload.eventType === 'DELETE') {
+                setAdminTasks(prev => prev.filter(task => task.id !== payload.old.id));
+            }
+        });
+
+        const unsubscribeBookings = supabaseService.subscribeToTable('bookings', () => {
+            // For bookings, we re-fetch to ensure we get the joined 'services' data
+            // which isn't included in the raw realtime payload
+            supabaseService.getActiveBookings().then(data => setBookings(data));
+        });
+
+        return () => {
+            unsubscribeTasks();
+            unsubscribeBookings();
+        };
     }, []);
 
     const fetchUser = async () => {
@@ -289,32 +299,97 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
                     </div>
                 </div>
 
-                {/* 3. Main Feature: Fleet Map (Center Left) */}
-                <div className="col-span-12 lg:col-span-8 bg-white rounded-[24px] p-2 border border-gray-100 shadow-sm h-[420px] relative">
-                    <div className="absolute top-6 left-6 z-10 bg-white/90 backdrop-blur px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
-                        <h3 className="font-bold text-zinc-900 flex items-center">
-                            <MapPin size={16} className="mr-2 text-blue-600" />
-                            Live Fleet
-                        </h3>
-                    </div>
-
-                    <div className="absolute top-6 right-6 z-10 flex space-x-2">
-                        <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm flex items-center text-xs font-medium text-zinc-600">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                            Cleaning
-                        </div>
-                        <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm flex items-center text-xs font-medium text-zinc-600">
-                            <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
-                            Driving
+                {/* 3. Task Board (Kanban) - MOVED TO CENTER LEFT */}
+                <div className="col-span-12 lg:col-span-8 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm min-h-[420px]">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-zinc-900 text-lg">Task Board</h3>
+                        <div className="flex space-x-2 text-xs font-medium text-gray-500">
+                            <span className="px-2 py-1 bg-gray-100 rounded">All Priorities</span>
                         </div>
                     </div>
 
-                    <div className="w-full h-full rounded-[20px] overflow-hidden">
-                        <LiveMap markers={demoData.fleet as any} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-auto md:h-[320px]">
+                        {/* To Do Column */}
+                        <div
+                            className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
+                            onDragOver={handleDragOver}
+                            onDrop={() => handleDrop('todo')}
+                        >
+                            <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
+                                <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div> To Do
+                            </h4>
+                            <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
+                                {adminTasks.filter(t => t.status === 'todo').map(task => (
+                                    <div
+                                        key={task.id}
+                                        draggable
+                                        onDragStart={() => handleDragStart(task)}
+                                        onDragEnd={handleDragEnd}
+                                        className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-50' : 'opacity-100'
+                                            }`}
+                                    >
+                                        <div className={`text-xs font-bold mb-1 ${task.priority === 'high' ? 'text-red-600' : 'text-blue-600'}`}>{task.priority}</div>
+                                        <p className="text-sm font-medium text-zinc-800">{task.title}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* In Progress Column */}
+                        <div
+                            className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
+                            onDragOver={handleDragOver}
+                            onDrop={() => handleDrop('in_progress')}
+                        >
+                            <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
+                                <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div> In Progress
+                            </h4>
+                            <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
+                                {adminTasks.filter(t => t.status === 'in_progress').map(task => (
+                                    <div
+                                        key={task.id}
+                                        draggable
+                                        onDragStart={() => handleDragStart(task)}
+                                        onDragEnd={handleDragEnd}
+                                        className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-50' : 'opacity-100'
+                                            }`}
+                                    >
+                                        <div className={`text-xs font-bold mb-1 ${task.priority === 'high' ? 'text-red-600' : 'text-orange-600'}`}>{task.priority}</div>
+                                        <p className="text-sm font-medium text-zinc-800">{task.title}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Done Column */}
+                        <div
+                            className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
+                            onDragOver={handleDragOver}
+                            onDrop={() => handleDrop('done')}
+                        >
+                            <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
+                                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div> Done
+                            </h4>
+                            <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
+                                {adminTasks.filter(t => t.status === 'done').map(task => (
+                                    <div
+                                        key={task.id}
+                                        draggable
+                                        onDragStart={() => handleDragStart(task)}
+                                        onDragEnd={handleDragEnd}
+                                        className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-30' : 'opacity-60'
+                                            }`}
+                                    >
+                                        <div className="text-xs font-bold text-gray-500 mb-1">{task.priority}</div>
+                                        <p className="text-sm font-medium text-zinc-800 line-through">{task.title}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* 4. Live Schedule / Dispatch (Center Right) */}
+                {/* 4. Live Schedule (Center Right) */}
                 <div className="col-span-12 lg:col-span-4 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm h-[420px] flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="font-bold text-zinc-900 text-lg">Live Schedule</h3>
@@ -359,145 +434,106 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
                     </button>
                 </div>
 
-                {/* 5. Productivity Layer (Tasks) */}
-                <div className="col-span-12 grid grid-cols-12 gap-6">
-
-                    {/* Daily Tasks List */}
-                    <div className="col-span-12 md:col-span-4 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm min-h-[300px]">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-zinc-900 text-lg">Daily Tasks</h3>
-                            <button
-                                onClick={() => setTaskModalOpen(true)}
-                                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
-                            >
-                                <Plus size={18} />
-                            </button>
-                        </div>
-                        <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
-                            {adminTasks.filter(t => t.status !== 'done').length === 0 && (
-                                <div className="text-center text-gray-400 py-8 text-sm">No pending tasks</div>
-                            )}
-                            {adminTasks.filter(t => t.status !== 'done').map((task) => (
-                                <div
-                                    key={task.id}
-                                    onClick={() => handleToggleTask(task)}
-                                    className="group flex items-start p-3 rounded-xl transition-all cursor-pointer border bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
-                                >
-                                    <div className="mt-0.5 mr-3 text-gray-300 group-hover:text-green-500 transition-colors">
-                                        <Circle size={20} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium text-zinc-900">{task.title}</p>
-                                        <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded mt-1 inline-block ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
-                                            task.priority === 'medium' ? 'bg-yellow-50 text-yellow-600' :
-                                                'bg-gray-100 text-gray-500'
-                                            }`}>
-                                            {task.priority}
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={(e) => handleDeleteTask(task.id, e)}
-                                        className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                {/* 5. Daily Tasks List - MOVED TO ROW 3 LEFT */}
+                <div className="col-span-12 md:col-span-4 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm min-h-[300px]">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-zinc-900 text-lg">Daily Tasks</h3>
+                        <button
+                            onClick={() => setTaskModalOpen(true)}
+                            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
+                        >
+                            <Plus size={18} />
+                        </button>
                     </div>
-
-                    {/* Task Board (Kanban) */}
-                    <div className="col-span-12 md:col-span-8 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm min-h-[300px]">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-zinc-900 text-lg">Task Board</h3>
-                            <div className="flex space-x-2 text-xs font-medium text-gray-500">
-                                <span className="px-2 py-1 bg-gray-100 rounded">All Priorities</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-auto md:h-[220px]">
-                            {/* To Do Column */}
+                    <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
+                        {adminTasks.filter(t => t.status !== 'done').length === 0 && (
+                            <div className="text-center text-gray-400 py-8 text-sm">No pending tasks</div>
+                        )}
+                        {adminTasks.filter(t => t.status !== 'done').map((task) => (
                             <div
-                                className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
-                                onDragOver={handleDragOver}
-                                onDrop={() => handleDrop('todo')}
+                                key={task.id}
+                                onClick={() => handleToggleTask(task)}
+                                className="group flex items-start p-3 rounded-xl transition-all cursor-pointer border bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
                             >
-                                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
-                                    <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div> To Do
-                                </h4>
-                                <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
-                                    {adminTasks.filter(t => t.status === 'todo').map(task => (
-                                        <div
-                                            key={task.id}
-                                            draggable
-                                            onDragStart={() => handleDragStart(task)}
-                                            onDragEnd={handleDragEnd}
-                                            className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-50' : 'opacity-100'
-                                                }`}
-                                        >
-                                            <div className={`text-xs font-bold mb-1 ${task.priority === 'high' ? 'text-red-600' : 'text-blue-600'}`}>{task.priority}</div>
-                                            <p className="text-sm font-medium text-zinc-800">{task.title}</p>
-                                        </div>
-                                    ))}
+                                <div className="mt-0.5 mr-3 text-gray-300 group-hover:text-green-500 transition-colors">
+                                    <Circle size={20} />
                                 </div>
-                            </div>
-
-                            {/* In Progress Column */}
-                            <div
-                                className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
-                                onDragOver={handleDragOver}
-                                onDrop={() => handleDrop('in_progress')}
-                            >
-                                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
-                                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div> In Progress
-                                </h4>
-                                <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
-                                    {adminTasks.filter(t => t.status === 'in_progress').map(task => (
-                                        <div
-                                            key={task.id}
-                                            draggable
-                                            onDragStart={() => handleDragStart(task)}
-                                            onDragEnd={handleDragEnd}
-                                            className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-50' : 'opacity-100'
-                                                }`}
-                                        >
-                                            <div className={`text-xs font-bold mb-1 ${task.priority === 'high' ? 'text-red-600' : 'text-orange-600'}`}>{task.priority}</div>
-                                            <p className="text-sm font-medium text-zinc-800">{task.title}</p>
-                                        </div>
-                                    ))}
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-zinc-900">{task.title}</p>
+                                    <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded mt-1 inline-block ${task.priority === 'high' ? 'bg-red-50 text-red-600' :
+                                        task.priority === 'medium' ? 'bg-yellow-50 text-yellow-600' :
+                                            'bg-gray-100 text-gray-500'
+                                        }`}>
+                                        {task.priority}
+                                    </span>
                                 </div>
+                                <button
+                                    onClick={(e) => handleDeleteTask(task.id, e)}
+                                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
-
-                            {/* Done Column */}
-                            <div
-                                className="bg-gray-50 rounded-xl p-3 flex flex-col transition-colors"
-                                onDragOver={handleDragOver}
-                                onDrop={() => handleDrop('done')}
-                            >
-                                <h4 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div> Done
-                                </h4>
-                                <div className="space-y-2 overflow-y-auto flex-1 custom-scrollbar">
-                                    {adminTasks.filter(t => t.status === 'done').map(task => (
-                                        <div
-                                            key={task.id}
-                                            draggable
-                                            onDragStart={() => handleDragStart(task)}
-                                            onDragEnd={handleDragEnd}
-                                            className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-all ${draggedTask?.id === task.id ? 'opacity-30' : 'opacity-60'
-                                                }`}
-                                        >
-                                            <div className="text-xs font-bold text-gray-500 mb-1">{task.priority}</div>
-                                            <p className="text-sm font-medium text-zinc-800 line-through">{task.title}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* 6. CRM / Potential Leads Section (NEW) */}
+                {/* 6. Quick Actions (Bottom) - MOVED TO ROW 3 RIGHT */}
+                <div className="col-span-12 md:col-span-8 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm min-h-[300px] flex flex-col">
+                    <h3 className="font-bold text-zinc-900 text-lg mb-6">Quick Actions</h3>
+                    <div className="grid grid-cols-2 gap-4 flex-1">
+                        <button
+                            onClick={() => setNewBookingOpen(true)}
+                            className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group"
+                        >
+                            <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-blue-400">
+                                <Plus size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-sm">New Booking</div>
+                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Create job</div>
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={() => setBroadcastOpen(true)}
+                            className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group"
+                        >
+                            <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-purple-400">
+                                <Megaphone size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-sm">Broadcast</div>
+                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Message all crews</div>
+                            </div>
+                        </button>
+
+                        <button className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group">
+                            <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-orange-400">
+                                <Truck size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-sm">Manage Fleet</div>
+                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Track & assign</div>
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={handlePayroll}
+                            className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group"
+                        >
+                            <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-green-400">
+                                <DollarSign size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-sm">Payroll</div>
+                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Run payouts</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                {/* 7. CRM / Potential Leads Section (NEW) - REMAINS BOTTOM */}
                 <div className="col-span-12 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
                         <div>
@@ -590,61 +626,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
                                 <button className="text-sm font-medium text-blue-600 hover:text-blue-800">View All Leads</button>
                             </div>
                         )}
-                    </div>
-                </div>
-
-                {/* 7. Quick Actions (Bottom) */}
-                <div className="col-span-12 bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-                    <h3 className="font-bold text-zinc-900 text-lg mb-4">Quick Actions</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button
-                            onClick={() => setNewBookingOpen(true)}
-                            className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group"
-                        >
-                            <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-blue-400">
-                                <Plus size={20} />
-                            </div>
-                            <div className="text-left">
-                                <div className="font-bold text-sm">New Booking</div>
-                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Create job</div>
-                            </div>
-                        </button>
-
-                        <button
-                            onClick={() => setBroadcastOpen(true)}
-                            className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group"
-                        >
-                            <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-purple-400">
-                                <Megaphone size={20} />
-                            </div>
-                            <div className="text-left">
-                                <div className="font-bold text-sm">Broadcast</div>
-                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Message all crews</div>
-                            </div>
-                        </button>
-
-                        <button className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group">
-                            <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-orange-400">
-                                <Truck size={20} />
-                            </div>
-                            <div className="text-left">
-                                <div className="font-bold text-sm">Manage Fleet</div>
-                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Track & assign</div>
-                            </div>
-                        </button>
-
-                        <button
-                            onClick={handlePayroll}
-                            className="flex items-center p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-black hover:text-white hover:border-black transition-all group"
-                        >
-                            <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center mr-3 group-hover:bg-gray-800 group-hover:text-green-400">
-                                <DollarSign size={20} />
-                            </div>
-                            <div className="text-left">
-                                <div className="font-bold text-sm">Payroll</div>
-                                <div className="text-xs text-gray-500 group-hover:text-gray-400">Run payouts</div>
-                            </div>
-                        </button>
                     </div>
                 </div>
 

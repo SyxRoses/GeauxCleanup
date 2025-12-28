@@ -58,17 +58,36 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
   };
 
   const loadServices = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await supabaseService.getServices();
-      setServices(data);
-    } catch (err) {
-      setError('Failed to load services. Please try again.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    // Mock data for Commercial Focus
+    setLoading(true);
+    const mockServices: Service[] = [
+      {
+        id: 'office-basic',
+        name: 'Office Basic',
+        description: 'Essential cleaning: Trash, vacuuming, mopping, and restrooms.',
+        base_price: 200,
+        duration_minutes: 120,
+        image_url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'office-deep',
+        name: 'Corporate Deep Clean',
+        description: 'Comprehensive detailed cleaning including windows and breakrooms.',
+        base_price: 450,
+        duration_minutes: 240,
+        image_url: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'floor-care',
+        name: 'Commercial Floor Care',
+        description: 'Stripping, waxing, buffing, and high-traffic maintenance.',
+        base_price: 300,
+        duration_minutes: 180,
+        image_url: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=800&q=80'
+      }
+    ];
+    setServices(mockServices);
+    setLoading(false);
   };
 
   const handleSubmitBooking = async () => {
@@ -123,17 +142,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
         customer_email: formData.customerEmail,
         customer_phone: formData.customerPhone,
         special_instructions: formData.specialInstructions || undefined,
-        // If we have a userId (either from session or new signup), we could link it here
-        // But currently createBooking doesn't explicitly take user_id in the args shown in previous files
-        // It relies on the service to handle it or it's just metadata. 
-        // Let's assume the service handles it or we need to update the service.
-        // Actually, looking at supabaseService.ts (from memory), it inserts into bookings.
-        // If RLS is on, the user_id is usually auth.uid(). 
-        // If we just signed up, we are "logged in" in the client context usually?
-        // Wait, signUp doesn't automatically sign in if email confirmation is required.
-        // But for this dev mode, maybe it does. 
-        // Let's assume we might need to handle the "not logged in yet" case if email confirm is on.
-        // For now, we just create the booking.
       });
 
       // Success! Close the wizard
@@ -153,25 +161,25 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
   const selectedServiceData = services.find(s => s.id === selectedService);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-gray-900/50 backdrop-blur-sm flex justify-end">
-      <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-brand-navy/60 backdrop-blur-sm flex justify-end">
+      <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col animate-slide-in-right rounded-l-[2rem] border-l border-white/20">
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
-          <button onClick={onClose} className="text-gray-500 hover:text-black">
-            <span className="sr-only">Close</span>
-            Close
+        <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white/90 backdrop-blur rounded-tl-[2rem] z-10">
+          <button onClick={onClose} className="text-brand-slate hover:text-brand-navy transition-colors font-medium text-sm flex items-center">
+            <ArrowLeft size={16} className="mr-1" />
+            Cancel
           </button>
           <div className="flex items-center space-x-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className={`h-1.5 w-8 rounded-full transition-colors ${i <= step ? 'bg-black' : 'bg-gray-200'}`} />
+              <div key={i} className={`h-1.5 w-10 rounded-full transition-all duration-500 ${i <= step ? 'bg-brand-gold shadow-glow' : 'bg-gray-100'}`} />
             ))}
           </div>
         </div>
 
         {/* Error Banner */}
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mx-6 mt-4">
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mx-8 mt-6 rounded-r-lg">
             <div className="flex items-center">
               <AlertCircle className="text-red-500 mr-2" size={20} />
               <p className="text-sm text-red-700">{error}</p>
@@ -180,140 +188,171 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
 
           {step === 1 && (
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-3xl font-bold text-gray-900">Select a Service</h2>
-              <p className="text-gray-500">Choose the level of clean your home needs.</p>
+            <div className="space-y-8 animate-fade-in-up">
+              <div>
+                <span className="text-brand-gold text-xs font-bold uppercase tracking-widest">Step 1 of 3</span>
+                <h2 className="text-3xl font-serif font-bold text-brand-navy mt-2">Select a Service</h2>
+                <p className="text-brand-slate mt-2">Choose the level of clean your business needs.</p>
+              </div>
 
               <div className="space-y-4">
                 {loading ? (
-                  <div className="text-center py-10">Loading services...</div>
+                  <div className="text-center py-10">
+                    <div className="w-8 h-8 border-4 border-brand-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-sm text-brand-slate mt-4">Loading services...</p>
+                  </div>
                 ) : services.length === 0 ? (
                   <div className="text-center py-10 text-gray-500">
-                    No services available. Please check your Supabase configuration.
+                    No services available.
                   </div>
                 ) : (
                   services.map((service) => (
                     <div
                       key={service.id}
                       onClick={() => setSelectedService(service.id)}
-                      className={`group relative p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedService === service.id
-                        ? 'border-black bg-gray-50'
-                        : 'border-gray-100 hover:border-gray-300'
+                      className={`group relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${selectedService === service.id
+                        ? 'border-brand-navy bg-brand-navy/5 shadow-md'
+                        : 'border-gray-100 hover:border-brand-navy/30 hover:shadow-lg'
                         }`}
                     >
-                      <div className="flex items-start space-x-4">
-                        <img src={service.image_url} alt={service.name} className="w-24 h-24 object-cover rounded-lg" />
+                      <div className="flex items-start space-x-5">
+                        <img src={service.image_url} alt={service.name} className="w-20 h-20 object-cover rounded-xl shadow-sm" />
                         <div className="flex-1">
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-gray-900">{service.name}</h3>
-                            <span className="font-semibold text-gray-900 text-sm bg-gray-100 px-2 py-1 rounded">Request Estimate</span>
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-xl font-serif font-bold text-brand-navy">{service.name}</h3>
+                            <span className="font-semibold text-brand-navy/70 text-xs bg-white border border-gray-100 px-3 py-1 rounded-full shadow-sm">
+                              Request Estimate
+                            </span>
                           </div>
-                          <p className="text-sm text-gray-500 mt-1 leading-relaxed">{service.description}</p>
-                          <div className="flex items-center mt-3 text-xs font-medium text-gray-400">
+                          <p className="text-sm text-brand-slate leading-relaxed mb-3">{service.description}</p>
+                          <div className="flex items-center text-xs font-medium text-brand-gold">
                             <Sparkles size={14} className="mr-1" />
                             Est. {service.duration_minutes / 60} hours
                           </div>
                         </div>
                         {selectedService === service.id && (
-                          <div className="absolute top-4 right-4 bg-black text-white p-1 rounded-full">
-                            <Check size={14} />
+                          <div className="absolute top-6 right-6 bg-brand-navy text-brand-gold p-1.5 rounded-full shadow-lg transform scale-100 transition-transform">
+                            <Check size={16} strokeWidth={3} />
                           </div>
                         )}
                       </div>
                     </div>
                   ))
                 )}
+
+                {/* Residential - Coming Soon */}
+                <div className="group relative p-6 rounded-2xl border-2 border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed">
+                  <div className="flex items-start space-x-5">
+                    <div className="w-20 h-20 bg-gray-200 rounded-xl flex items-center justify-center">
+                      <Home className="text-gray-400" size={32} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-xl font-serif font-bold text-gray-500">Residential Cleaning</h3>
+                        <span className="font-semibold text-gray-500 text-xs bg-gray-100 border border-gray-200 px-3 py-1 rounded-full">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-400 leading-relaxed mb-3">We are currently focusing on commercial partners. Residential services will return soon.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-3xl font-bold text-gray-900">Your Information</h2>
-              <p className="text-gray-500">Tell us about yourself and where we should clean.</p>
+            <div className="space-y-8 animate-fade-in-up">
+              <div>
+                <span className="text-brand-gold text-xs font-bold uppercase tracking-widest">Step 2 of 3</span>
+                <h2 className="text-3xl font-serif font-bold text-brand-navy mt-2">Business Details</h2>
+                <p className="text-brand-slate mt-2">Tell us about your company and where we should clean.</p>
+              </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
 
                 {/* Account Creation / Login Status */}
                 {!session ? (
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
-                    <h4 className="font-bold text-blue-900 text-sm mb-1">Create your account</h4>
-                    <p className="text-xs text-blue-700">We'll create a secure account for you to manage your bookings.</p>
+                  <div className="bg-brand-navy/5 p-5 rounded-2xl border border-brand-navy/10 mb-6 flex items-start space-x-3">
+                    <Sparkles className="text-brand-navy mt-0.5" size={18} />
+                    <div>
+                      <h4 className="font-bold text-brand-navy text-sm mb-1">Create your account</h4>
+                      <p className="text-xs text-brand-slate">We'll create a secure account for you to manage your bookings.</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-100 mb-4 flex items-center">
+                  <div className="bg-green-50 p-4 rounded-2xl border border-green-100 mb-6 flex items-center">
                     <Check size={16} className="text-green-600 mr-2" />
                     <p className="text-sm text-green-800">Logged in as <strong>{session.user.email}</strong></p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                  <label className="block text-sm font-semibold text-brand-navy mb-2">Contact Name</label>
                   <input
                     type="text"
                     value={formData.customerName}
                     onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                     placeholder="John Doe"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                  <label className="block text-sm font-semibold text-brand-navy mb-2">Email</label>
                   <input
                     type="email"
                     value={formData.customerEmail}
                     onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                     placeholder="john@example.com"
                     required
-                    disabled={!!session} // Disable email if logged in
+                    disabled={!!session}
                   />
                 </div>
 
-                {/* Password Field - Only if not logged in */}
+                {/* Password Field */}
                 {!session && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Create Password *</label>
+                    <label className="block text-sm font-semibold text-brand-navy mb-2">Create Password</label>
                     <div className="relative">
-                      <Lock size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <Lock size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                       <input
                         type="password"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                        className="w-full pl-12 pr-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                         placeholder="Min. 6 characters"
                         required
                         minLength={6}
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">You'll use this to log in to your dashboard.</p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                  <label className="block text-sm font-semibold text-brand-navy mb-2">Phone</label>
                   <input
                     type="tel"
                     value={formData.customerPhone}
                     onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                     placeholder="(555) 123-4567"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Address *</label>
+                  <label className="block text-sm font-semibold text-brand-navy mb-2">Business Address</label>
                   <input
                     type="text"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                     placeholder="123 Main St, San Francisco, CA 94102"
                     required
                   />
@@ -321,34 +360,34 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                    <label className="block text-sm font-semibold text-brand-navy mb-2">Date</label>
                     <input
                       type="date"
                       value={formData.scheduledDate}
                       onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
                       min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+                    <label className="block text-sm font-semibold text-brand-navy mb-2">Time</label>
                     <input
                       type="time"
                       value={formData.scheduledTime}
                       onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                      className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
+                  <label className="block text-sm font-semibold text-brand-navy mb-2">Special Instructions (Optional)</label>
                   <textarea
                     value={formData.specialInstructions}
                     onChange={(e) => setFormData({ ...formData, specialInstructions: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                    className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/50 transition-all font-medium text-brand-navy"
                     rows={3}
                     placeholder="Any specific areas to focus on or access instructions..."
                   />
@@ -358,17 +397,21 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
           )}
 
           {step === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-3xl font-bold text-gray-900">Review Request</h2>
+            <div className="space-y-8 animate-fade-in-up">
+              <div>
+                <span className="text-brand-gold text-xs font-bold uppercase tracking-widest">Step 3 of 3</span>
+                <h2 className="text-3xl font-serif font-bold text-brand-navy mt-2">Confirm Request</h2>
+                <p className="text-brand-slate mt-2">Double check your details before submitting.</p>
+              </div>
 
-              <div className="bg-gray-50 p-6 rounded-xl space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Service</span>
-                  <span className="font-medium">{selectedServiceData?.name}</span>
+              <div className="bg-brand-gray/50 p-8 rounded-2xl space-y-5 border border-gray-100">
+                <div className="flex justify-between text-sm py-2 border-b border-gray-200">
+                  <span className="text-brand-slate">Service</span>
+                  <span className="font-bold text-brand-navy">{selectedServiceData?.name}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Date & Time</span>
-                  <span className="font-medium">
+                <div className="flex justify-between text-sm py-2 border-b border-gray-200">
+                  <span className="text-brand-slate">Date & Time</span>
+                  <span className="font-bold text-brand-navy text-right">
                     {formData.scheduledDate && formData.scheduledTime
                       ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toLocaleString('en-US', {
                         weekday: 'short',
@@ -380,23 +423,24 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
                       : 'Not selected'}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Address</span>
-                  <span className="font-medium text-right max-w-xs">{formData.address}</span>
+                <div className="flex justify-between text-sm py-2 border-b border-gray-200">
+                  <span className="text-brand-slate">Address</span>
+                  <span className="font-bold text-brand-navy text-right max-w-xs">{formData.address}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Contact</span>
-                  <span className="font-medium">{formData.customerEmail}</span>
+                <div className="flex justify-between text-sm py-2 border-b border-gray-200">
+                  <span className="text-brand-slate">Contact</span>
+                  <span className="font-bold text-brand-navy">{formData.customerEmail}</span>
                 </div>
-                <div className="border-t border-gray-200 pt-4 flex justify-between text-lg font-bold">
-                  <span>Estimated Total</span>
-                  <span className="text-sm font-normal text-gray-500">Pending Quote</span>
+                <div className="pt-4 flex justify-between items-center">
+                  <span className="text-lg font-bold text-brand-navy">Estimated Total</span>
+                  <span className="px-3 py-1 bg-brand-navy text-brand-gold text-xs font-bold uppercase rounded-full tracking-wider">Pending Quote</span>
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-sm text-blue-900">
-                  <strong>Note:</strong> This is a quote request. We will review your details and reach out with a final price estimate shortly.
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 flex items-start space-x-3">
+                <Sparkles size={20} className="text-blue-600 mt-0.5" />
+                <p className="text-sm text-blue-900 leading-relaxed">
+                  <strong>Almost done!</strong> Upon submission, our team will review your requirements and send a finalized quote to your email within 24 hours.
                 </p>
               </div>
             </div>
@@ -404,7 +448,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-gray-100 bg-white">
+        <div className="p-8 border-t border-gray-100 bg-white rounded-bl-[2rem]">
           <div className="flex space-x-4">
             {step > 1 && (
               <Button onClick={prevStep} variant="outline" fullWidth disabled={submitting}>Back</Button>
@@ -415,6 +459,8 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
                 else nextStep();
               }}
               fullWidth
+              variant="primary"
+              className="shadow-glow"
               disabled={
                 (step === 1 && !selectedService) ||
                 (step === 2 && (!formData.customerName || !formData.customerEmail || !formData.customerPhone || !formData.address || !formData.scheduledDate || !formData.scheduledTime || (!session && !formData.password))) ||
