@@ -58,36 +58,53 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
   };
 
   const loadServices = async () => {
-    // Mock data for Commercial Focus
-    setLoading(true);
-    const mockServices: Service[] = [
-      {
-        id: 'office-basic',
-        name: 'Office Basic',
-        description: 'Essential cleaning: Trash, vacuuming, mopping, and restrooms.',
-        base_price: 200,
-        duration_minutes: 120,
-        image_url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
-      },
-      {
-        id: 'office-deep',
-        name: 'Corporate Deep Clean',
-        description: 'Comprehensive detailed cleaning including windows and breakrooms.',
-        base_price: 450,
-        duration_minutes: 240,
-        image_url: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80'
-      },
-      {
-        id: 'floor-care',
-        name: 'Commercial Floor Care',
-        description: 'Stripping, waxing, buffing, and high-traffic maintenance.',
-        base_price: 300,
-        duration_minutes: 180,
-        image_url: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=800&q=80'
+    try {
+      setLoading(true);
+      const data = await supabaseService.getServices();
+
+      // Filter for commercial services if needed, or just use what's in DB
+      // For now, we'll use whatever is in the DB. 
+      // If the DB is empty, we might want to show a message or fallback,
+      // but falling back to mocks with invalid IDs causes errors.
+      if (data && data.length > 0) {
+        setServices(data);
+      } else {
+        // Fallback for demo purposes ONLY if DB is empty - but warn about IDs
+        console.warn('No services found in DB. Using mock data which may fail booking creation due to ID mismatch.');
+        const mockServices: Service[] = [
+          {
+            id: 'office-maintenance',
+            name: 'Office Maintenance',
+            description: 'Daily or weekly cleaning for professional workspaces. Trash removal, vacuuming, and restroom sanitation.',
+            base_price: 200,
+            duration_minutes: 120,
+            image_url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
+          },
+          {
+            id: 'commercial-floor-care',
+            name: 'Commercial Floor Care',
+            description: 'Stripping, waxing, buffing, and high-traffic maintenance for commercial spaces.',
+            base_price: 300,
+            duration_minutes: 180,
+            image_url: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=800&q=80'
+          },
+          {
+            id: 'post-construction',
+            name: 'Post-Construction',
+            description: 'Heavy-duty site cleanup for renovated commercial spaces. Debris removal and fine dust elimination.',
+            base_price: 600,
+            duration_minutes: 480,
+            image_url: '/images/service-post-construction.png'
+          }
+        ];
+        setServices(mockServices);
       }
-    ];
-    setServices(mockServices);
-    setLoading(false);
+    } catch (error: any) {
+      console.error('Failed to load services:', error);
+      setError(error.message || 'Failed to load available services. Please refresh the page.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmitBooking = async () => {
@@ -100,33 +117,65 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
       setSubmitting(true);
       setError(null);
 
-      let userId = session?.user?.id;
+      // Always check the latest session state first
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      let userId = currentSession?.user?.id;
 
-      // 1. Create Account if not logged in
-      if (!session) {
+      // 1. Handle Authentication (Create Account or Sign In)
+      if (!userId) {
         if (!formData.password) {
           setError('Please provide a password to create your account.');
           setSubmitting(false);
           return;
         }
 
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.customerEmail,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.customerName,
-              role: 'customer' // Explicitly set role
+        try {
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: formData.customerEmail,
+            password: formData.password,
+            options: {
+              data: {
+                full_name: formData.customerName,
+                role: 'customer'
+              }
             }
-          }
-        });
+          });
 
-        if (authError) throw authError;
-        if (authData.user) {
-          userId = authData.user.id;
-          // Wait a moment for the trigger to create the public user profile
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          if (authError) throw authError;
+
+          if (authData.user) {
+            userId = authData.user.id;
+            // Wait a moment for the trigger to create the public user profile if needed
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        } catch (authError: any) {
+          // If user already exists, try to sign them in with the provided password
+          if (authError.message?.includes('already registered') || authError.message?.includes('User already exists')) {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: formData.customerEmail,
+              password: formData.password
+            });
+
+            if (signInError) {
+              // If sign in fails (e.g. wrong password), show a clearer error
+              if (signInError.message.includes('Invalid login credentials')) {
+                throw new Error('An account with this email already exists, but the password provided was incorrect.');
+              }
+              throw signInError;
+            }
+
+            if (signInData.user) {
+              userId = signInData.user.id;
+            }
+          } else {
+            // Re-throw other auth errors
+            throw authError;
+          }
         }
+      }
+
+      if (!userId) {
+        throw new Error('Authentication failed. Please try again.');
       }
 
       // Combine date and time into ISO string
@@ -142,14 +191,15 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
         customer_email: formData.customerEmail,
         customer_phone: formData.customerPhone,
         special_instructions: formData.specialInstructions || undefined,
+        customer_id: userId,
       });
 
       // Success! Close the wizard
-      alert(session ? 'Quote requested! We will review your request and reach out shortly.' : 'Account created and quote requested! Please check your email.');
+      alert('Quote requested successfully! We will review your request and reach out shortly.');
       onClose();
     } catch (err: any) {
+      console.error('Booking error:', err);
       setError(err.message || 'Failed to create booking. Please try again.');
-      console.error(err);
     } finally {
       setSubmitting(false);
     }

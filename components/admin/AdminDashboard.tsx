@@ -790,9 +790,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack, onLogout
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
                                 <select className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
-                                    <option>Standard Clean</option>
-                                    <option>Deep Clean</option>
-                                    <option>Move-In/Out</option>
+                                    <option>Office Maintenance</option>
+                                    <option>Commercial Floor Care</option>
+                                    <option>Post-Construction</option>
                                 </select>
                             </div>
                             <button

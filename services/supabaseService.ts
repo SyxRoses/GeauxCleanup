@@ -13,7 +13,7 @@ export const supabaseService = {
 
         if (error) {
             console.error('Error fetching services:', error);
-            throw new Error('Failed to load services');
+            throw new Error(error.message);
         }
 
         return data || [];
@@ -31,6 +31,7 @@ export const supabaseService = {
         customer_email: string;
         customer_phone: string;
         special_instructions?: string;
+        customer_id?: string;
     }): Promise<Booking> => {
         const { data, error } = await supabase
             .from('bookings')
