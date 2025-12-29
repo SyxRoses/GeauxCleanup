@@ -20,7 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onNavigate, sessi
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, []);         
 
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-soft-xl py-2' : 'bg-transparent py-4'}`}>
