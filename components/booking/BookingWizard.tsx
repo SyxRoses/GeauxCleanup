@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Service } from '../../types';
 import { Button } from '../ui/Button';
-import { ArrowLeft, Check, Calendar, CreditCard, Home, Sparkles, AlertCircle, Lock } from 'lucide-react';
+import { ArrowLeft, Check, Calendar, CreditCard, Sparkles, AlertCircle, Lock } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import { supabase } from '../../lib/supabase';
 import { Session } from '@supabase/supabase-js';
@@ -76,23 +76,31 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose, onSuccess
           {
             id: 'office-maintenance',
             name: 'Office Maintenance',
-            description: 'Daily or weekly cleaning for professional workspaces. Trash removal, vacuuming, and restroom sanitation.',
+            description: 'Daily or weekly cleaning for professional workspaces. Trash removal, vacuuming, mopping, and restroom sanitation.',
             base_price: 200,
             duration_minutes: 120,
-            image_url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
+            image_url: '/images/service-office-maintenance.png'
+          },
+          {
+            id: 'corporate-deep-clean',
+            name: 'Corporate Deep Clean',
+            description: 'Comprehensive detailed cleaning for offices. Windows, breakrooms, conference rooms, and all common areas.',
+            base_price: 450,
+            duration_minutes: 240,
+            image_url: '/images/service-corporate-deep-clean.png'
           },
           {
             id: 'commercial-floor-care',
             name: 'Commercial Floor Care',
-            description: 'Stripping, waxing, buffing, and high-traffic maintenance for commercial spaces.',
+            description: 'Professional floor maintenance including stripping, waxing, buffing, and high-traffic area restoration.',
             base_price: 300,
             duration_minutes: 180,
-            image_url: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=800&q=80'
+            image_url: '/images/service-commercial-floor-care.png'
           },
           {
-            id: 'post-construction',
-            name: 'Post-Construction',
-            description: 'Heavy-duty site cleanup for renovated commercial spaces. Debris removal and fine dust elimination.',
+            id: 'post-construction-cleanup',
+            name: 'Post-Construction Cleanup',
+            description: 'Heavy-duty site cleanup for renovated or newly built commercial spaces. Debris removal and move-in ready finish.',
             base_price: 600,
             duration_minutes: 480,
             image_url: '/images/service-post-construction.png'
@@ -297,23 +305,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose, onSuccess
                   ))
                 )}
 
-                {/* Residential - Coming Soon */}
-                <div className="group relative p-6 rounded-2xl border-2 border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed">
-                  <div className="flex items-start space-x-5">
-                    <div className="w-20 h-20 bg-gray-200 rounded-xl flex items-center justify-center">
-                      <Home className="text-gray-400" size={32} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-xl font-serif font-bold text-gray-500">Residential Cleaning</h3>
-                        <span className="font-semibold text-gray-500 text-xs bg-gray-100 border border-gray-200 px-3 py-1 rounded-full">
-                          Coming Soon
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-400 leading-relaxed mb-3">We are currently focusing on commercial partners. Residential services will return soon.</p>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </div>
           )}
