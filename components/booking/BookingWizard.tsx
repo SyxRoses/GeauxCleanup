@@ -8,9 +8,10 @@ import { Session } from '@supabase/supabase-js';
 
 interface BookingWizardProps {
   onClose: () => void;
+  onSuccess?: () => void; // Called after successful booking to navigate user
 }
 
-export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
+export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose, onSuccess }) => {
   const [step, setStep] = useState(1);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -194,9 +195,12 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({ onClose }) => {
         customer_id: userId,
       });
 
-      // Success! Close the wizard
-      alert('Quote requested successfully! We will review your request and reach out shortly.');
-      onClose();
+      // Success! Call onSuccess to navigate to profile, or fallback to just closing
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     } catch (err: any) {
       console.error('Booking error:', err);
       setError(err.message || 'Failed to create booking. Please try again.');

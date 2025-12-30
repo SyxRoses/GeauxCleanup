@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
-import { Clock, MapPin, Calendar, Star, ChevronRight, Home, CreditCard, MessageSquare, Plus, Sparkles, AlertCircle } from 'lucide-react';
+import { Clock, MapPin, Calendar, Star, ChevronRight, Home, CreditCard, MessageSquare, Plus, Sparkles, AlertCircle, Gift } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import { Booking } from '../../types';
 import { supabase } from '../../lib/supabase';
@@ -9,9 +9,10 @@ interface CustomerDashboardProps {
   onLogout: () => void;
   onNewBooking: () => void;
   onHome: () => void;
+  onNavigate: (page: 'history' | 'support' | 'wallet' | 'referral') => void;
 }
 
-export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onLogout, onNewBooking, onHome }) => {
+export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onLogout, onNewBooking, onHome, onNavigate }) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('Customer');
@@ -62,9 +63,10 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onLogout, 
         </div>
         <div className="flex items-center space-x-6">
           <button onClick={onHome} className="text-sm font-medium text-gray-500 hover:text-black">Home</button>
-          <button className="text-sm font-medium text-gray-500 hover:text-black">My Bookings</button>
-          <button className="text-sm font-medium text-gray-500 hover:text-black">Wallet</button>
-          <button className="text-sm font-medium text-gray-500 hover:text-black">Support</button>
+          <button onClick={() => onNavigate('history')} className="text-sm font-medium text-gray-500 hover:text-black">My Bookings</button>
+          <button onClick={() => onNavigate('wallet')} className="text-sm font-medium text-gray-500 hover:text-black">Wallet</button>
+          <button onClick={() => onNavigate('support')} className="text-sm font-medium text-gray-500 hover:text-black">Support</button>
+          <button onClick={() => onNavigate('referral')} className="text-sm font-medium text-purple-600 hover:text-purple-800 font-bold">Refer & Earn</button>
           <button onClick={onLogout} className="text-sm font-medium text-red-500 hover:text-red-700">Sign Out</button>
           <div className="h-8 w-8 rounded-full bg-gray-200 border border-gray-300 overflow-hidden cursor-pointer" onClick={onLogout}>
             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} alt="User" />
@@ -217,25 +219,42 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onLogout, 
                   </div>
                   <span className="text-sm font-medium">Book Clean</span>
                 </button>
-                <button className="p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all text-center flex flex-col items-center justify-center space-y-2 group">
+                <button className="p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all text-center flex flex-col items-center justify-center space-y-2 group" onClick={() => onNavigate('support')}>
                   <div className="bg-purple-50 p-2 rounded-lg text-purple-600 group-hover:bg-black group-hover:text-white transition-colors">
                     <MessageSquare size={20} />
                   </div>
                   <span className="text-sm font-medium">Support</span>
                 </button>
-                <button className="p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all text-center flex flex-col items-center justify-center space-y-2 group">
+                <button className="p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all text-center flex flex-col items-center justify-center space-y-2 group" onClick={() => onNavigate('history')}>
                   <div className="bg-orange-50 p-2 rounded-lg text-orange-600 group-hover:bg-black group-hover:text-white transition-colors">
                     <Clock size={20} />
                   </div>
                   <span className="text-sm font-medium">History</span>
                 </button>
-                <button className="p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all text-center flex flex-col items-center justify-center space-y-2 group">
+                <button className="p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all text-center flex flex-col items-center justify-center space-y-2 group" onClick={() => onNavigate('wallet')}>
                   <div className="bg-green-50 p-2 rounded-lg text-green-600 group-hover:bg-black group-hover:text-white transition-colors">
                     <CreditCard size={20} />
                   </div>
                   <span className="text-sm font-medium">Wallet</span>
                 </button>
               </div>
+
+              {/* Referral Banner */}
+              <button
+                onClick={() => onNavigate('referral')}
+                className="mt-4 w-full p-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white text-left hover:from-purple-700 hover:to-purple-900 transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Gift size={24} />
+                    <div>
+                      <p className="font-bold">Refer & Earn $25</p>
+                      <p className="text-sm text-purple-200">Share with friends</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
             </div>
 
             {/* Stats */}

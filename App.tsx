@@ -6,6 +6,10 @@ import { ProcessSection } from './components/landing/ProcessSection';
 import { ImageGallery } from './components/landing/ImageGallery';
 import { BookingWizard } from './components/booking/BookingWizard';
 import { CustomerDashboard } from './components/customer/CustomerDashboard';
+import { HistoryPage } from './components/customer/HistoryPage';
+import { SupportPage } from './components/customer/SupportPage';
+import { WalletPage } from './components/customer/WalletPage';
+import { ReferralPage } from './components/customer/ReferralPage';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { ServicesPage } from './components/landing/ServicesPage';
 import { PricingPage } from './components/landing/PricingPage';
@@ -14,6 +18,7 @@ import { Login } from './components/auth/Login';
 import { Sparkles } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { Booking } from './types';
 
 
 
@@ -79,10 +84,11 @@ const Footer = () => (
 );
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'home' | 'customer' | 'admin' | 'services' | 'pricing' | 'about' | 'login'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'customer' | 'admin' | 'services' | 'pricing' | 'about' | 'login' | 'history' | 'support' | 'wallet' | 'referral'>('home');
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [rebookData, setRebookData] = useState<Booking | null>(null);
 
   useEffect(() => {
     // Check active session
@@ -169,11 +175,48 @@ const App: React.FC = () => {
 
   if (currentView === 'customer') {
     return (
-      <CustomerDashboard
-        onLogout={handleLogout}
-        onNewBooking={() => setIsBookingOpen(true)}
-        onHome={() => setCurrentView('home')}
-      />
+      <>
+        <CustomerDashboard
+          onLogout={handleLogout}
+          onNewBooking={() => setIsBookingOpen(true)}
+          onHome={() => setCurrentView('home')}
+          onNavigate={(page) => setCurrentView(page)}
+        />
+        {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} onSuccess={() => { setIsBookingOpen(false); setCurrentView('customer'); }} />}
+      </>
+    );
+  }
+
+  if (currentView === 'history') {
+    return (
+      <>
+        <HistoryPage
+          onBack={() => setCurrentView('customer')}
+          onRebook={(booking) => {
+            setRebookData(booking);
+            setIsBookingOpen(true);
+          }}
+        />
+        {isBookingOpen && <BookingWizard onClose={() => { setIsBookingOpen(false); setRebookData(null); }} onSuccess={() => { setIsBookingOpen(false); setRebookData(null); setCurrentView('customer'); }} />}
+      </>
+    );
+  }
+
+  if (currentView === 'support') {
+    return (
+      <SupportPage onBack={() => setCurrentView('customer')} />
+    );
+  }
+
+  if (currentView === 'wallet') {
+    return (
+      <WalletPage onBack={() => setCurrentView('customer')} />
+    );
+  }
+
+  if (currentView === 'referral') {
+    return (
+      <ReferralPage onBack={() => setCurrentView('customer')} />
     );
   }
 
@@ -217,7 +260,7 @@ const App: React.FC = () => {
         />
         <ServicesPage onBook={() => setIsBookingOpen(true)} />
         <Footer />
-        {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} />}
+        {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} onSuccess={() => { setIsBookingOpen(false); setCurrentView('customer'); }} />}
       </div>
     );
   }
@@ -236,7 +279,7 @@ const App: React.FC = () => {
         />
         <PricingPage onBook={() => setIsBookingOpen(true)} />
         <Footer />
-        {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} />}
+        {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} onSuccess={() => { setIsBookingOpen(false); setCurrentView('customer'); }} />}
       </div>
     );
   }
@@ -255,7 +298,7 @@ const App: React.FC = () => {
         />
         <AboutPage onBook={() => setIsBookingOpen(true)} />
         <Footer />
-        {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} />}
+        {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} onSuccess={() => { setIsBookingOpen(false); setCurrentView('customer'); }} />}
       </div>
     );
   }
@@ -281,7 +324,7 @@ const App: React.FC = () => {
         <Footer />
       </main>
 
-      {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} />}
+      {isBookingOpen && <BookingWizard onClose={() => setIsBookingOpen(false)} onSuccess={() => { setIsBookingOpen(false); setCurrentView('customer'); }} />}
     </div>
   );
 };

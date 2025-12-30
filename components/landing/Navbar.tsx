@@ -20,7 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onNavigate, sessi
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);         
+  }, []);
 
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-soft-xl py-2' : 'bg-transparent py-4'}`}>
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onNavigate, sessi
               </>
             ) : (
               <button
-                onClick={() => onNavigate('customer')}
+                onClick={() => onNavigate('login')}
                 className="text-sm font-semibold text-brand-navy hover:text-brand-gold transition-colors mr-2"
               >
                 Login
@@ -116,9 +116,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onNavigate, sessi
                 </button>
               </>
             ) : (
-              <button onClick={() => onNavigate('customer')} className="block text-lg font-medium text-brand-navy">Customer Login</button>
+              <button onClick={() => { setIsOpen(false); onNavigate('login'); }} className="block text-lg font-medium text-brand-navy">Customer Login</button>
             )}
-            <button onClick={() => onNavigate('admin')} className="block text-base font-medium text-gray-400">Admin Portal</button>
+            <button onClick={() => { setIsOpen(false); onNavigate('admin'); }} className="block text-base font-medium text-gray-400">Admin Portal</button>
           </div>
           <Button onClick={onOpenBooking} fullWidth size="lg">Book Now</Button>
         </div>
